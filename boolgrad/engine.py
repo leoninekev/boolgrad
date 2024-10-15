@@ -54,6 +54,30 @@ class Bool:
 
         out._backward = _backward
         return out
+    
+    def __xor__(self, other):
+        # XOR operation
+        other = other if isinstance(other, Bool) else Bool(other)
+        x1 = self.data
+        x2 = other.data
+        x = np.abs(x1*x2)*np.sign(-x1*x2)
+        out = Bool(x, (self, other), '^')
+
+        def _backward():
+            # XNOR(g'(f(x)),f'(x))
+            # f = XOR(x,a)
+            # f' = not(a)
+            # g'(f(x)) = z =  out.grad
+
+            self_df = np.sign(-other.data)
+            other_df = np.sign(-self.data)
+            dg = out.grad
+            self.grad += np.sign(self_df*dg)
+            other.grad += np.sign(other_df*dg)
+
+        out._backward = _backward
+        return out
+    
     def backward(self):
 
         # topological order all of the children in the graph
