@@ -1,3 +1,5 @@
+# heavily inspired from
+# https://github.com/karpathy/micrograd
 
 import numpy as np
 
@@ -17,19 +19,22 @@ class Bool:
         other = other if isinstance(other, Bool) else Bool(other)
         x1 = self.data
         x2 = other.data
-        #x = np.abs(x1*x2)*np.sign(x1*x2+x1+x2)
-        x = np.abs(x1*x2)*np.sign(x1*x2+1)
+        x = (np.abs(x1*x2)>0)*np.sign(x1+x2+1)
         out = Bool(x, (self, other), '+')
 
         def _backward():
             # XNOR(g'(f(x)),f'(x))
             # f = OR(x,a)
             # g'(f(x)) = z =  out.grad
-            self_df = np.min([0,other.data])
-            other_df = np.min([0,self.data])
-            dg = out.grad
-            self.grad += np.sign(self_df*dg)
-            other.grad += np.sign(other_df*dg)
+            if other.data == 0 or self.data == 0:
+                self.grad += 0
+                other.grad += 0
+            else:
+                self_df = np.min([0,other.data])
+                other_df = np.min([0,self.data])
+                dg = out.grad
+                self.grad += np.sign(self_df*dg)
+                other.grad += np.sign(other_df*dg)
 
         out._backward = _backward
         return out
@@ -39,28 +44,42 @@ class Bool:
         other = other if isinstance(other, Bool) else Bool(other)
         x1 = self.data
         x2 = other.data
-        x = np.abs(x1*x2)*np.sign(x1*x2+x1+x2)
+        x = (np.abs(x1*x2)>0)*np.sign(x1*x2+x1+x2)
         out = Bool(x, (self, other), '*')
 
         def _backward():
             # XNOR(g'(f(x)),f'(x))
             # f = OR(x,a)
             # g'(f(x)) = z =  out.grad
-            self_df = np.max([0,other.data])
-            other_df = np.max([0,self.data])
-            dg = out.grad
-            self.grad += np.sign(self_df*dg)
-            other.grad += np.sign(other_df*dg)
+            if other.data == 0 or self.data == 0:
+                self.grad += 0
+                other.grad += 0
+            else:
+                self_df = np.max([0,other.data])
+                other_df = np.max([0,self.data])
+                dg = out.grad
+                self.grad += np.sign(self_df*dg)
+                other.grad += np.sign(other_df*dg)
 
         out._backward = _backward
         return out
+    
+    def __radd__(self, other): # other + self
+        return self + other
+
+    def __rmul__(self, other): # other * self
+        return self * other
+
+    def __rxor__(self, other): # other * self
+        return self ^ other
+
     
     def __xor__(self, other):
         # XOR operation
         other = other if isinstance(other, Bool) else Bool(other)
         x1 = self.data
         x2 = other.data
-        x = np.abs(x1*x2)*np.sign(-x1*x2)
+        x = np.sign(-x1*x2)
         out = Bool(x, (self, other), '^')
 
         def _backward():
@@ -68,12 +87,15 @@ class Bool:
             # f = XOR(x,a)
             # f' = not(a)
             # g'(f(x)) = z =  out.grad
-
-            self_df = np.sign(-other.data)
-            other_df = np.sign(-self.data)
-            dg = out.grad
-            self.grad += np.sign(self_df*dg)
-            other.grad += np.sign(other_df*dg)
+            if other.data == 0 or self.data == 0:
+                self.grad += 0
+                other.grad += 0
+            else:
+                self_df = np.sign(-other.data)
+                other_df = np.sign(-self.data)
+                dg = out.grad
+                self.grad += np.sign(self_df*dg)
+                other.grad += np.sign(other_df*dg)
 
         out._backward = _backward
         return out
@@ -97,7 +119,7 @@ class Bool:
             v._backward()
     
     def __repr__(self):
-        return f"Bool(data={self.data}, grad={self.grad})"
+        return f"data:{self.data}, grad:{self.grad}"
 
 class Value:
     """ stores a single scalar value and its gradient """
