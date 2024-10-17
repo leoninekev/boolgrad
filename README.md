@@ -6,6 +6,8 @@ It is a Proof-of-Concept implementation of key concepts introduced in the paper 
 
 The code structure and organization is heavily inspired from [micrograd](https://github.com/karpathy/micrograd) by Andrej Karpathy. It is almost a copy with necessary changes for dealing with Boolean values.
 
+Check this [notebook](./boolgrad/notebooks/dev.ipynb) for some basic gates and their gradients
+
 For implications, see this [notes](https://mlsquare.github.io/intro2dl/lectures/L01.html#universal-approximation)
 
 
