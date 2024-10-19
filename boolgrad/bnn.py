@@ -31,6 +31,7 @@ class ProdTron(Module):
     def __repr__(self):
         return f"ProdTron({len(self.w)})"
 
+
 class SumTron(Module):
 
     def __init__(self, nin,xor=True):
