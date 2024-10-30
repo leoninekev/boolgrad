@@ -39,30 +39,49 @@ class Bool:
         out._backward = _backward
         return out
 
+# Comment line #43-58 after test 
     def __mul__(self, other):
-        # AND operation
+        # Multiplication operation
         other = other if isinstance(other, Bool) else Bool(other)
-        x1 = self.data
-        x2 = other.data
-        x = (np.abs(x1*x2)>0)*np.sign(x1*x2+x1+x2)
+        x = self.data * other.data
         out = Bool(x, (self, other), '*')
 
         def _backward():
-            # XNOR(g'(f(x)),f'(x))
-            # f = OR(x,a)
-            # g'(f(x)) = z =  out.grad
             if other.data == 0 or self.data == 0:
                 self.grad += 0
                 other.grad += 0
             else:
-                self_df = np.max([0,other.data])
-                other_df = np.max([0,self.data])
-                dg = out.grad
-                self.grad += np.sign(self_df*dg)
-                other.grad += np.sign(other_df*dg)
-
+                # For multiplication, gradients are the other variable's data times the output gradient
+                self.grad += other.data * out.grad
+                other.grad += self.data * out.grad
         out._backward = _backward
         return out
+
+# UnComment line #61-84 after test 
+#     def __mul__(self, other):
+#         # AND operation
+#         other = other if isinstance(other, Bool) else Bool(other)
+#         x1 = self.data
+#         x2 = other.data
+#         x = (np.abs(x1*x2)>0)*np.sign(x1*x2+x1+x2)
+#         out = Bool(x, (self, other), '*')
+
+#         def _backward():
+#             # XNOR(g'(f(x)),f'(x))
+#             # f = OR(x,a)
+#             # g'(f(x)) = z =  out.grad
+#             if other.data == 0 or self.data == 0:
+#                 self.grad += 0
+#                 other.grad += 0
+#             else:
+#                 self_df = np.max([0,other.data])
+#                 other_df = np.max([0,self.data])
+#                 dg = out.grad
+#                 self.grad += np.sign(self_df*dg)
+#                 other.grad += np.sign(other_df*dg)
+
+#         out._backward = _backward
+#         return out
     
     def __radd__(self, other): # other + self
         return self + other
